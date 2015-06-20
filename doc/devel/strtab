@@ -1,0 +1,36 @@
+This is the format for resources of type STRTAB. It contains a number of
+items of unspecified data (not necessarilly strings).
+This is used for game strings (extension .txt), colour tables (.ct),
+and colour translation tables (.xlt).
+
+Everything is stored MSB first unless otherwise specified.
+
+position   length  meaning
+           4       Unknown, always 0xffffffff
+           2       Unknown, always 0x0000
+           2       number of items in the file (StringCount)
+
+Followed by:
+  In file:
+           4       Placeholder, always 0x00000000
+    numitems times:
+           4       length of string
+  In memory:
+    numitems times:
+           4       offset from &StringCount to the string
+    followed by:
+           4       offset from &StringCount until one char past the end
+                   of the last string.
+
+
+For .ct files an item is as follows:
+           1       Index of first clut in this item.
+           1       Index of last clut in this item.
+  For each item:
+    32 palette entries:
+           2       bits 0-4: blue value
+                   bits 5-9: green value
+                   bits 10-15: red value
+The full palette contains 256 values, which are the original 32 values
+    multiplied by 1 to 8.
+

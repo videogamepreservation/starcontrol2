@@ -1,0 +1,155 @@
+Before doing any non-trivial, please discuss it first in the IRC channel
+(channel #sc2 at irc.freenode.net), or the mailing list
+(sc2-devel@lists.sourceforge.net). Be sure to be in agreement with the
+people actually working on the project; it would be a shame if you put a lot
+of effort into something, and then having to find out it won't be accepted
+into the cvs tree. Note that v1.0 will pretty much be a straight port,
+with no gameplay-altering features added.
+
+Serious bugs (crash the game, high priority):
+- Communication screens nonrepeatably but inevitably hang the system.  This
+  is probably a deadlock issue.
+  - Often more probable when heavy color table transformations are going on
+- Load/save code doesn't work perfectly, hangs sometimes when after loading
+  trying to enter some star first time etc
+- OpenGL mode might cause lockups when entering a star system, while
+  pure SDL mode does not; can others confirm this?
+
+Glitches (don't crash the game, medium priority):
+- The melnorme don't charge for fuel when you ask "fill 'er up"
+  Instead, they pay you a Credit.
+- Autopilot indicator keeps blinking when entering combat, when autopilot
+  was on.
+- momentary slowdown of scrolling in hyperspace about once per second
+  You can see this if you look very closely, or increase the resolution of
+  the frame counter to 10 times per second and start with -ttl.
+- When landing to planet surface, crossfaded image is wrong compared to
+  landing position (and so 'flashes' when crossfade ends)
+- Flashing rects aren't perhaps always exactly the size of actual 3do version,
+  it should be checked (for example when selecting ship in fullgame battle)
+- In melee, after battle, the game crashes.
+  The ship icon is used when already freed. This happens because the old
+  3DO code used to save the entire selection window as one image, while
+  Chris' new code redraws after each round.
+  Possible solutions:
+  - revert to the old behaviour
+  - delay the free until the memory is really no longer needed.
+    Make sure that the memory is always freed, so no memory leak is
+    introduced.
+  - reload the icon when needed
+  It looks like the same bug is present for the full game, though it isn't
+  fatal there (the memory is freed but not yet overwritten).
+  Addition 2002-10-23: I commented out the free, so that the game wouldn't
+  crash anymore. This means the memory will not be freed until after the
+  complete battle (not just one fight). There's no permanent memory leak
+  though.
+- OpenAL sound code problems:
+  - Some unimplemented functions (for oscilloscope and dialogue seeking)
+  - Linux OpenAL implementation sucks, so for now we are using SDL_mixer
+    on that platform.
+  - Volume levels aren't maybe exactly as they should
+  - Crashes if no audio device available
+- Color table transformations are very slow.
+  - We should try to get rid of excessive creation of new threads
+- Circles of influence aren't shown the first time (after load?) a player
+  examines the starmap.
+- Selling bio data gives an incomplete message: 'The 1000' [nothing].
+- When out of fuel: "Fill all my fuel tanks to maximum capacity" ->
+  "Your ship's capacity is insufficient to hold that much fuel"
+- Melee zooming may bug a little, ship sometimes flashes as big and then
+  small again (some 3DO owner should check does this happen in original)
+- Earth color can vary between different runs, it should be always blue
+  when not being near of it
+- In Linux, when the audio device isn't available, you can play the game,
+  but it will hang on termination
+- Subtitles in conversation will sometimes hang off the end (e.g. the 
+  Ilwrath reacting to the Ur-Quan Drone) or not appear at all (e.g. the 
+  Yehat).
+- ZFP graphics synchronisation messed up when fast forwarding speech
+- Melee menu's 5x5 ship selection grid doesn't show up always
+  - On win32, works with release build, not debug
+  - On linux, works with SDL_mixer, not OpenAL
+- When entering to star system, graphics might go wild
+  (doesn't draw background so leaves trails, etc)
+- Currently some sound effects are perhaps from PC version.. 3DO ones should be
+  extracted to check/fix this
+
+Implementation bugs (low priority):
+- Scaling code problems:
+  - sai, supersai doesn't work for >16bpp
+  - bilinear is only implemented under opengl
+  - opengl misses all other modes than bilinear
+    - do them with software and/or pixel shader hw?
+
+Stuff still to do (large):
+- add a Key Jamming program
+- add some way to configure your keys
+- add some way to configure the PC/3DO/other choices.
+  - music should be selectable track by track
+- Actually implement the differences between PC and 3DO versions, including
+  the alternate scripts (even the basic dialogue is not identical)
+- make stuff endian-safe
+  In particularly 24-bits scaling is known to be unsafe.
+  Furthermore, saving and loading games uses cread and cwrite, which is
+  not endian-safe, and which is writing out values of heap pointers.  This
+  really should be cleaned up just in general and made endian safe to boot.
+- 3d planet view when entering orbit
+- some packaging system for resources. zlib looks like something
+  which is suitable for this.
+- reconcile all of the differences between the voice (3DO) script and the
+  text script, then do it all again for the PC version.  This will involve
+  extensive poking around the 3DO game to make sure that the Human Captain's
+  lines are all correct, too.
+- Match timing between subtitles and speech clips
+- Intro and end credits (both 3DO and PC version ones)
+- add an install program (in particularly for Windows).
+  How to handle the libraries?
+- Configuration and saved games should be written at ~/.sc/ for example, so that
+  game can be installed globally for many users.
+
+Stuff still to do (medium size):
+- oscilloscope
+- loading teams in melee
+- pixel-perfect collision checks
+- remove libtool dependancy
+  This will probably mean the empty dummy.c files can be removed too.
+  (note that src/sc2code/dummy.c DOES contain data)
+- lines and colouring of planet surface display when scanning.
+  Its speed isn't correct either.
+- get all code to compile without warnings, when the most strict
+  checks are performed (not just -W -Wall in gcc)
+- try to speed up resource loading. It looks to be much slower now
+  than it needs to be.
+- Convert bulky media files into more compact representations
+- planet surface smoothing
+- Proper uninitialization of everything when quitting
+  - Currently pretty nonexistant, got only some atexit callbacks
+
+Stuff still to do (small):
+- make sure save files are independant of endianness, so that Mac savefiles
+  can be used on the pc (and the other way around).
+  - Also remove the values that are pointers into the heap, since those get
+    cached and restored by the load routine anyway.
+- make a file types.h, which defines non-confusing integer types.
+  There are at the moment 3 systems: int16, DWORD, and Sint16.
+  I suggest we keep int16, as 'word' is confusing. Sint16 is an SDL define
+  and should only be used in SDL calls.
+
+Questions:
+- remove src/sc2code/test.c?
+- Is there some way to automatically do CRLF translations on commits,
+  with the -t and -f options in cvswrapper disabled by sourceforge?
+- What is the displist stuff for? Is it needed at all?
+- are there still threads killing themselves instead of just exiting?
+  Answer: "find . -name \*.c | xargs grep Killthread" says "no."
+- w_memlib used (now commented out) MS Windows functions to show messages
+  when memory couldn't be allocated. If we want to have those return, some
+  work will have to be done. If not, there's some dead code to remove.
+- The functions like HMalloc don't guarantee success, so checks should be
+  done, and are even done in some places. But it might make more sense to
+  let HMalloc abort the program if it fails (there's little to do anyhow),
+  so we can rely on HMalloc returning a non-NULL value.
+  If we want, we could allocate a block of reserve memory at the start,
+  which we can free when no more memory is available, to allow an emergency
+  save.
+- How about an ISO image for a self-contained linux CD which boots into SC2?

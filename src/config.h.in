@@ -1,0 +1,25 @@
+/* Directory where the UQM game data is located */
+#define CONTENTDIR "@CONTENTDIR@"
+
+/* Directory where temporary game data will be stored */
+#define TEMPDIR "/tmp/"
+
+/* Directory where, relative to the users home dir, personal game data
+   will be stored */
+#define USERDIR ".uqm/"
+
+/* Directory where save games will be stored */
+#define SAVEDIR USERDIR "save/"
+
+/* Directory where config files will be stored */
+#define CONFIGDIR USERDIR
+
+/* Defined if words are stored with the most significant byte first */
+@WORDS_BIGENDIAN@
+
+/* Defined if your system has strupr of its own */
+@HAVE_STRUPR@
+
+/* Defined if your system has stricmp of its own */
+@HAVE_STRICMP@
+

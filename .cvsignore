@@ -1,0 +1,8 @@
+.libs .deps
+*.la *.lo *.o *.so *.out *.log *.in
+*~ core #*#
+Makefile Makefile.in
+autogen.sh
+*.m4
+*stamp
+config.*
